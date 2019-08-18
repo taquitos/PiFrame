@@ -1,0 +1,51 @@
+* {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+body {
+  background-color: #000;
+}
+
+.gif {
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  background-image: url(/img/splash.png);
+  background-repeat: no-repeat;
+  background-position: center center;
+  -webkit-background-size: contain;
+  -moz-background-size: contain;
+  -o-background-size: contain;
+  background-size: contain;
+  z-index: 1;
+}
+
+.back {
+  width: 50%;
+  height: 100%;
+  left: 0;
+  position: fixed;
+  z-index: 2;
+}
+
+.forward {
+  width: 50%;
+  height: 100%;
+  right: 0;
+  position: fixed;
+  z-index: 2;
+}
+
+.visible {
+  visibility: visible;
+  opacity: 1;
+  transition: visibility 0s .5s, opacity .5s linear;
+}
+
+.hidden {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0s .5s, opacity .5s linear;
+}
