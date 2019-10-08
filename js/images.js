@@ -14,8 +14,8 @@ var scanInterval = setInterval(scanImages, 3600000); // Every 3600 seconds.
 // Timer that fires to load next image.
 var imageInterval = null;
 
-// Every 15 seconds.
-var intervalTime = 15000;
+// Every 30 seconds.
+var intervalTime = 30000;
 function scanImages(jQuery) {
   $.ajax({
     type:'get',
@@ -36,12 +36,12 @@ function resetImageTimer() {
   // This only happens on load of page.
   if (imageInterval == null) {
     loadNextImage()
-    imageInterval = setInterval(loadNextImage, intervalTime); // Every 15 seconds
+    imageInterval = setInterval(loadNextImage, intervalTime); // Every `intervalTime`
     return;
   }
 
   clearInterval(imageInterval);
-  imageInterval = setInterval(loadNextImage, intervalTime); // Every 15 seconds
+  imageInterval = setInterval(loadNextImage, intervalTime); // Every `intervalTime`
 }
 
 function isImageExist(imageFilename) {
