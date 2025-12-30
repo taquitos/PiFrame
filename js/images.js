@@ -3,7 +3,7 @@
 var images = [];
 
 // Relative path to images we'll be showing.
-var imageDirectory = "img/sync/"
+var imageDirectory = "img/sync/";
 
 // Image index that we are going to display.
 var currentImageIndex = 0;
@@ -16,17 +16,44 @@ var imageInterval = null;
 
 // Every 30 seconds.
 var intervalTime = 30000;
-function scanImages(jQuery) {
+var rescanDelayMs = 10000;
+var rescanTimeout = null;
+
+function buildImageUrl(imageFilename) {
+  return new URL(imageDirectory + imageFilename, window.location.href).toString();
+}
+
+function showSplash() {
+  $('#gif').css({ "background-image": ("url(/img/splash.png)") });
+}
+
+function scheduleRescan() {
+  if (rescanTimeout != null) {
+    return;
+  }
+  rescanTimeout = setTimeout(function() {
+    rescanTimeout = null;
+    scanImages();
+  }, rescanDelayMs);
+}
+
+function scanImages() {
   $.ajax({
     type:'get',
     url: '/cgi-bin/images.rb',
+    dataType: 'json',
     success:function(data) {
+      if (rescanTimeout != null) {
+        clearTimeout(rescanTimeout);
+        rescanTimeout = null;
+      }
       currentImageIndex = -1;
       images = data;
       resetImageTimer();
     },
     error:function(data) {
       console.log("There was an error calling /cgi-bin/images.rb, does the folder image/sync exist?")
+      scheduleRescan();
     }
   });
 }
@@ -44,40 +71,56 @@ function resetImageTimer() {
   imageInterval = setInterval(loadNextImage, intervalTime); // Every `intervalTime`
 }
 
-function isImageExist(imageFilename) {
-  var http = new XMLHttpRequest();
-  http.open('HEAD', window.location.href + imageDirectory + imageFilename, false);
-  http.send();
-  var exists = http.status == 200;
-
-  if (!exists) {
-    console.log("Server missing data:" + img.src)
+function removeMissingImage(imageFilename) {
+  var index = images.indexOf(imageFilename);
+  if (index === -1) {
+    return;
   }
-  return exists
+  images.splice(index, 1);
+  if (index <= currentImageIndex && currentImageIndex > 0) {
+    currentImageIndex -= 1;
+  }
+  if (currentImageIndex >= images.length) {
+    currentImageIndex = 0;
+  }
+}
+
+function preloadImage(imageUrl, onLoad, onError) {
+  var img = new Image();
+  img.onload = onLoad;
+  img.onerror = onError;
+  img.src = imageUrl;
 }
 
 function loadImage(newImage) {
-  // If we can't find images, then either we just deleted all of them or the server sertup isn't complete.
-  // If image doesn't exist, the image folder probably just synced. It's easiest to just reload the page knowing
-  // that the reload will pick up the changes and put us into a known state.
-  if (images.length < 1 || !isImageExist(newImage)) {
-    $('#gif').css({ "background-image": ("url(img/splash.png)") });
-    setTimeout(function () {
-      location.reload(true);
-    }, 10000);
-    return 
+  // If we can't find images, then either we just deleted all of them or the server setup isn't complete.
+  if (images.length < 1 || !newImage) {
+    showSplash();
+    scheduleRescan();
+    return;
   }
 
-  var path = imageDirectory + newImage;
+  var path = buildImageUrl(newImage);
 
   $('#gif').removeClass("visible");
-  $('#gif').addClass("hidden")
-  //code before the pause
-  setTimeout(function(){
-    $('#gif').css({ "background-image": ("url(" + path + ")") });
-    $('#gif').addClass("visible");
-    $('#gif').removeClass("hidden")
-  }, 500);
+  $('#gif').addClass("hidden");
+  // code before the pause
+  preloadImage(path, function() {
+    setTimeout(function(){
+      $('#gif').css({ "background-image": ("url(" + path + ")") });
+      $('#gif').addClass("visible");
+      $('#gif').removeClass("hidden");
+    }, 500);
+  }, function() {
+    console.log("Server missing data: " + newImage);
+    removeMissingImage(newImage);
+    if (images.length < 1) {
+      showSplash();
+      scheduleRescan();
+      return;
+    }
+    setTimeout(loadNextImage, 0);
+  });
 }
 
 // Loads the next image from `images` using `currentImageIndex`
@@ -120,4 +163,4 @@ function initializeView() {
 $(document).ready(initializeView);
 
 // Restart after 6 hours to pick up any changes in git.
-setTimeout("location.reload(true);", 21600000);
+setTimeout(function() { location.reload(); }, 21600000);
