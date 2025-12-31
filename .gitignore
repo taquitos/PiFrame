@@ -1,3 +1,6 @@
 *.DS_Store
 img/sync/*
-
+tools/input/*
+tools/output/*
+!tools/input/.gitkeep
+!tools/output/.gitkeep

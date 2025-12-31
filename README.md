@@ -32,6 +32,7 @@ We had a kid and my extended family wants to stay updated with the latest and gr
 	* [Configuring auto-update](#auto_update)
 	* [Changing window manager background](#background)
 7. [Optional: Optimizing power usage and reducing heat](#optimizing)
+8. [Tools: Preparing GIFs](#tools_gifs)
 
 <a name="materials"></a> 
 ## Materials: 
@@ -352,3 +353,45 @@ arm_freq=1000
 ```
 
 Now reboot the pi (`sudo reboot`) and you’re done 😹!
+
+<a name="tools_gifs"></a>
+## Tools: Preparing GIFs
+PiFrame will display any images you drop into `img/sync`, but animated GIFs look best when resized to your screen.
+This repo includes a helper script that uses ImageMagick to resize and optimize animated GIFs.
+
+Install ImageMagick (if needed). The script will attempt to install it automatically unless you pass `--no-install`:
+
+`sudo apt install -y imagemagick`
+
+Run the tool from the repo root (auto-detects portrait vs landscape per file). By default it reads from `./tools/input` and writes to `./tools/output`:
+
+```
+tools/prepare_gifs.sh
+```
+
+Common options:
+* `--auto` (default) to detect orientation per file
+* `--portrait` (320x480) or `--landscape` (480x320) to force an orientation
+* `--fit contain|cover|stretch` (default: contain)
+* `--out <dir>` (default: ./tools/output)
+* `--no-pingpong` to keep the original playback (no reverse)
+* `--colors <n>` (default: 128, use 0 to disable)
+* `--no-dither` to disable dithering
+* `--no-gifsicle` to skip extra optimization if `gifsicle` is installed
+* `--no-install` to skip auto-installing dependencies
+* `--format webp` to output animated WebP instead of GIF (still loops)
+* `--webp-quality <n>` (default: 80) and `--webp-method <n>` (default: 6)
+
+Supported resolutions: `320x480` (portrait) and `480x320` (landscape).
+
+Animated WebP requires Chromium with WebP animation support.
+
+If you want to write directly to the frame’s sync folder, you can do:
+
+```
+tools/prepare_gifs.sh --out img/sync ~/Downloads/gifs
+```
+
+See full usage:
+
+`tools/prepare_gifs.sh --help`
