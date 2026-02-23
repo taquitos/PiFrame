@@ -1,5 +1,8 @@
 *.DS_Store
+.serena/
 img/sync/*
+input/
+output/
 tools/input/*
 tools/output/*
 !tools/input/.gitkeep
